@@ -2,6 +2,7 @@
 // http://localhost:3000/isolated/exercise/06.js
 
 import * as React from 'react'
+import warning from 'warning'
 import {Switch} from '../switch'
 
 const callAll =
@@ -49,8 +50,12 @@ function useToggle({
     if (!onIsControlled) {
       dispatch(action)
     }
-    onChange && onChange(reducer({...state, on}, action), action)
+    onChange && onChange(reducer({...state, on}, action), action);
   }
+
+
+  warning(on ? onChange : true, 'This component is readonly. Pass the onChangeProp to change it');
+  
 
   // make these call `dispatchWithOnChange` instead
   const toggle = () => dispatchWithOnChange({type: actionTypes.toggle})
@@ -107,8 +112,8 @@ function App() {
   return (
     <div>
       <div>
-        <Toggle on={bothOn} onChange={handleToggleChange} />
-        <Toggle on={bothOn} onChange={handleToggleChange} />
+        <Toggle on={bothOn}  />
+        <Toggle on={bothOn}/>
       </div>
       {timesClicked > 4 ? (
         <div data-testid="notice">
