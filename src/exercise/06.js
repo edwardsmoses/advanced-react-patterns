@@ -50,12 +50,15 @@ function useToggle({
     if (!onIsControlled) {
       dispatch(action)
     }
-    onChange && onChange(reducer({...state, on}, action), action);
+    onChange && onChange(reducer({...state, on}, action), action)
   }
 
+  warning(
+    on ? onChange : true,
+    'This component is readonly. Pass the onChangeProp to change it',
+  )
 
-  warning(on ? onChange : true, 'This component is readonly. Pass the onChangeProp to change it');
-  
+  useControlledSwitchWarning(on, 'on', 'Toggle');
 
   // make these call `dispatchWithOnChange` instead
   const toggle = () => dispatchWithOnChange({type: actionTypes.toggle})
@@ -86,6 +89,33 @@ function useToggle({
   }
 }
 
+function useControlledSwitchWarning(
+  controlPropValue,
+  controlPropName,
+  componentName,
+) {
+  /*
+   * Determine whether or not the component is controlled and warn the developer
+   * if this changes unexpectedly.
+   */
+  let isControlled = controlPropValue != null
+  let {current: wasControlled} = React.useRef(isControlled)
+  let effect = void {}
+  if (process.env.NODE_ENV !== 'production') {
+    effect = function () {
+      warning(
+        !(!isControlled && wasControlled),
+        `\`${componentName}\` is changing from uncontrolled to be controlled. Reach UI components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`,
+      )
+      warning(
+        !(!isControlled && wasControlled),
+        `\`${componentName}\` is changing from controlled to be uncontrolled. Reach UI components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`,
+      )
+    }
+  }
+  React.useEffect(effect, [componentName, controlPropName, isControlled])
+}
+
 function Toggle({on: controlledOn, onChange}) {
   const {on, getTogglerProps} = useToggle({on: controlledOn, onChange})
   const props = getTogglerProps({on})
@@ -112,8 +142,8 @@ function App() {
   return (
     <div>
       <div>
-        <Toggle on={bothOn}  />
-        <Toggle on={bothOn}/>
+        <Toggle on={bothOn} />
+        <Toggle on={bothOn} />
       </div>
       {timesClicked > 4 ? (
         <div data-testid="notice">
